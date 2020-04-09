@@ -8,8 +8,13 @@ validate = Validation()
 def main():
 	print("Waiting for command...")
 	inputString = input("> ")
-	if inputString == "email":
-		changeEmail()
+	if inputString == "mail":
+		if inputString := input("Modify sender or receiver: ") == "sender":
+			changeSender()
+		elif inputString == "receiver":
+			changeReceiver()
+		else: 
+			print("Unknown command.")
 	elif inputString == "add":
 		add()
 	elif inputString == "remove":
@@ -22,16 +27,19 @@ def main():
 		reset()
 	elif inputString == "activate":
 		activate()
+	elif inputString == "exit":
+		exit()
 	else:
 		print("Unknown command.")
 
 
 def init():
 	with open("log.json", "w") as path:
-		json.dump({"email": "foobar", "logs": []}, path, ensure_ascii=False)
+		json.dump({"mail": "foobar", "logs": []}, path, nsure_ascii=False)
 	with open("login.json", "w") as path:
-		json.dump({"secrets": []}, path, ensure_ascii=False)
-	changeEmail()
+		json.dump({"mail":[],"secrets": []}, path, ensure_ascii=False)
+	changeReceiver()
+	changeSender()
 
 
 def reset():
@@ -40,17 +48,36 @@ def reset():
 	init()
 
 
-def changeEmail():
+def changeReceiver():
 	with open("log.json", "r") as path:
 		log = json.load(path)
-	email = input("E-mail: ")
-	print(email)
-	while not validate.mail(email):
+	mail = input("E-mail: ")
+	while not validate.mail(mail):
 		print("Invalid E-Mail.")
-		email = input("E-mail: ")
-	log["email"] = email
+		mail = input("E-mail: ")
+	log["mail"] = mail
 	with open("log.json", "w") as path:
 		json.dump(log, path, ensure_ascii=False)
+
+
+def changeSender():
+	with open("login.json", "r") as path:
+		login = json.load(path)
+	mail = input("G-mail Address: ")
+	while not validate.gmail(mail):
+			print("Invalid Gmail address.")
+			mail = input("Gmail Address: ")
+	password = input("Password: ")
+	while not validate.gmailCredentials():
+		print("Invalid e-mail/password.")
+		mail = input("Gmail: ")
+		while not validate.gmail(mail):
+			print("Invalid Gmail address.")
+			mail = input("Gmail Address: ")
+		password = input("Password: ")
+	login["mail"] = [mail, password]
+	with open("login.json", "w") as path:
+		json.dump(login, path, ensure_ascii=False)
 
 
 def add():
@@ -93,17 +120,16 @@ def remove():
 	else:
 		print("Invalid address.")
 
-
-if not fs.path.isfile("log.json"):
-	init()
-else:
-	printList()
+if not fs.path.isfile("log.json") and not fs.path.isfile("login.json"):
+	init()	
 
 while True:
 	main()
 
+
+
 """ {
-	"email": "foo@bar.com",
+	"mail": "foo@bar.com",
 	"logs": [
 		{
 			"adress": "adress",
@@ -117,6 +143,10 @@ while True:
 } """
 
 """ {
+	"mail": {
+		"address": "foobar@gmail.com",
+		"password": "password"
+	},
 	"n11": {
 		"username": "foo@bar.com",
 		"password": "password"
