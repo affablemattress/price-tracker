@@ -1,7 +1,6 @@
 import json
 import os as fs
-from utilities import Validation
-from utilities import Mail
+from utilities import Validation, Mail, toHTTP
 
 validate = Validation()
 
@@ -9,7 +8,8 @@ def main():
 	print("Waiting for command...")
 	inputString = input("> ")
 	if inputString == "mail":
-		if inputString := input("Modify sender or receiver: ") == "sender":
+		inputString = input("Modify sender or receiver: ")
+		if inputString == "sender":
 			changeSender()
 		elif inputString == "receiver":
 			changeReceiver()
@@ -20,7 +20,16 @@ def main():
 	elif inputString == "remove":
 		remove()
 	elif inputString == "credential":
-		changeCredential()
+		if inputString := input("Modify n11 or hepsiburada or gittigidiyor or amazon: ") == "n11":
+			changeCredential("n11")
+		elif inputString == "hepsiburada":
+			changeCredential("hepsiburada")
+		elif inputString == "gittigidiyor":
+			changeCredential("gittigidiyor")
+		elif inputString == "amazon":
+			changeCredential("amazon")
+		else: 
+			print("Unknown command.")
 	elif inputString == "list":
 		printList()
 	elif inputString == "reset":
@@ -35,7 +44,7 @@ def main():
 
 def init():
 	with open("log.json", "w") as path:
-		json.dump({"mail": "foobar", "logs": []}, path, nsure_ascii=False)
+		json.dump({"mail": "foobar", "logs": []}, path, ensure_ascii=False)
 	with open("login.json", "w") as path:
 		json.dump({"mail":[],"secrets": []}, path, ensure_ascii=False)
 	changeReceiver()
@@ -68,7 +77,7 @@ def changeSender():
 			print("Invalid Gmail address.")
 			mail = input("Gmail Address: ")
 	password = input("Password: ")
-	while not validate.gmailCredentials():
+	while not validate.gmailCredentials(mail, password):
 		print("Invalid e-mail/password.")
 		mail = input("Gmail: ")
 		while not validate.gmail(mail):
@@ -80,13 +89,26 @@ def changeSender():
 		json.dump(login, path, ensure_ascii=False)
 
 
+def changeCredential(site):
+	with open("login.json", "r") as path:
+		login = json.load(path)
+	mail = input("E-mail: ")
+	while not validate.mail(mail):
+			print("Invalid e-mail.")
+			mail = input("E-mail: ")
+	password = input("Password: ")
+	login["site"] = {"email": mail, "password": password}
+	with open("login.json", "w") as path:
+		json.dump(login, path, ensure_ascii=False)
+
+
 def add():
 	address = input("Page address: ")
 	validation = validate.address(address, False)
 	if validation[0] == "unique":
 		addressInfo = inspectAddress(address)
 		productLog = {
-			"adress": address,
+			"adress": toHTTP(address),
 			"site": addressInfo.site,
 			"name": addressInfo.name,
 			"maxPrice": addressInfo.price,
@@ -119,6 +141,28 @@ def remove():
 		print("Address not found in log.")
 	else:
 		print("Invalid address.")
+
+
+def printList():
+	with open("log.json", "r") as path:
+		log = json.load(path)
+	if len(log["logs"]) == 0:
+		print("List empty.")
+	else:
+		text = ""
+		html = "<html><body>"
+		for product in log["logs"]:
+			text += "{}   Max. Price: {}   Min. Price: {}   Current Price: {}\n".format(product["name"], product["maxPrice"], product["minPrice"], product["lastPrice"])
+			html += '<h4>{}</h5><a href="{}">Link</a> <p>   Max. Price: {}   Min. Price: {}   Current Price: {}</p>'.format(product["name"], product["address"], product["maxPrice"], product["minPrice"], product["lastPrice"])
+		print(text)
+		html += "</body></html>"
+		with Mail() as mail:
+			if mail.send([text, html]):
+				print("Sent mail.")
+			else:
+				print("Couldn't send mail.")
+			
+
 
 if not fs.path.isfile("log.json") and not fs.path.isfile("login.json"):
 	init()	
