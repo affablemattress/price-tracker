@@ -14,19 +14,19 @@ class Validation:
 		return validation
 
 
-	def address(self, address: str, returnAddress: bool) -> list: 
+	def address(self, address: str) -> list: 
 		regex = re.search(re.compile(r"^(https?:\/\/)?([a-z]+\.)?([a-z0-9]+)(\.com|\.com\.tr)(\/.+)"), address)
 		validation = True if re.search(re.compile(r"[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$"), address) and regex else False
 		returnList = [validation]
-		if returnAddress and validation:
+		if validation:
 			try:
-				returnList.append(''.join([regex.group(iter) for iter in range(3,6)]))
+				returnList.append('https://www.' + ''.join([regex.group(iter) for iter in range(3,6)]))
 			except AttributeError:
 				pass
 		return returnList
 
 
-	def gmailCredentials(self, email: str, password: str):
+	def gmailCredentials(self, email: str, password: str) -> bool:
 		server = smtplib.SMTP("smtp.gmail.com", 587)
 		try:
 			server.ehlo()
@@ -50,7 +50,7 @@ class Mail:
 		self.instanceID = "Price Tracker " + str(randint(1000, 9999))
 
 
-	def send(self, message: list):
+	def send(self, message: list) -> bool:
 		server = smtplib.SMTP("smtp.gmail.com", 587)
 		try:
 			server.ehlo()
@@ -65,3 +65,60 @@ class Mail:
 		except smtplib.SMTPAuthenticationError or smtplib.SMTPServerDisconnected or smtplib.SMTPHeloError:
 			return False
 		return True
+
+
+def modifyLogWithPrice(address: str, price: int, sendMail: bool):
+	with open("log.json", "r") as path:
+			log = json.load(path)
+	for item in log["logs"]:
+		if item["address"] == address:
+			product = item
+			break
+	if price < product["lastPrice"]:
+		newProduct = product
+		newProduct["lastPrice"] = price
+		newProduct["minPrice"] = price if price < newProduct["minPrice"] else newProduct["minPrice"]
+		if sendMail:
+			with Mail as mail:
+				text = "{}   Max. Price: {}   Min. Price: {}   Last Price: {}\nCurrent Price: {}".format(product["name"], product["maxPrice"], product["minPrice"], product["lastPrice"], newProduct["lastPrice"])
+				html = '<h4>{}</h5><a href="{}">Link</a> <p>   Max. Price: {}   Min. Price: {}   Last Price: {}   <b>Current Price: {}</b></p>'.format(product["name"], product["address"], product["maxPrice"], product["minPrice"], product["lastPrice"], newProduct["lastPrice"])
+				if mail.send([text, html]):
+					print("Sent mail.")
+				else:
+					print("Couldn't send mail.")
+		log["logs"].remove(product)
+		log["logs"].append(newProduct)
+		with open("log.json", "w") as path:
+			json.dump(log, path, ensure_ascii=False)
+	elif price > product["lastPrice"]:
+		newProduct = product
+		newProduct["lastPrice"] = price
+		newProduct["maxPrice"] = price if price > newProduct["maxPrice"] else newProduct["maxPrice"]
+		log["logs"].remove(product)
+		log["logs"].append(newProduct)
+		with open("log.json", "w") as path:
+			json.dump(log, path, ensure_ascii=False)
+
+
+def inspectAddress(address: str, sendMail: bool) -> int:
+	regex = re.search(re.compile(r"^(https?:\/\/)?([a-z]+\.)?([a-z0-9]+)(\.com|\.com\.tr)(\/.+)"), address)
+	if site := regex.group(3) == "n11":
+		if info := scrapeN11(address):
+			price = info["price"]
+			modifyLogWithPrice(address, price, sendMail)
+		return info
+	elif site == "hepsiburada":
+		if info := scrapeHepsiburada(address):
+			price = info["price"]
+			modifyLogWithPrice(address, price, sendMail)
+		return info
+	elif site == "gittigidiyor":
+		if info := scrapeGittigidiyor(address):
+			price = info["price"]
+			modifyLogWithPrice(address, price, sendMail)
+		return info
+	elif site == "amazon":
+		if info := scrapeGittigidiyor(address):
+			price = info["price"]
+			modifyLogWithPrice(address, price, sendMail)
+		return info

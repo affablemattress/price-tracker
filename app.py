@@ -1,6 +1,6 @@
 import json
 import os as fs
-from utilities import Validation, Mail, toHTTP
+from utilities import Validation, Mail, toHTTP, inspectAddress
 
 validate = Validation()
 
@@ -104,11 +104,11 @@ def changeCredential(site):
 
 def add():
 	address = input("Page address: ")
-	validation = validate.address(address, False)
+	validation = validate.address(address)
 	if validation[0] == "unique":
 		addressInfo = inspectAddress(address)
 		productLog = {
-			"adress": toHTTP(address),
+			"adress": validation[1],
 			"site": addressInfo.site,
 			"name": addressInfo.name,
 			"maxPrice": addressInfo.price,
@@ -128,7 +128,7 @@ def add():
 
 def remove():
 	address = input("Page address: ")
-	validation = validate.address(address, True)
+	validation = validate.address(address)
 	with open("log.json", "r") as path:
 		log = json.load(path)
 	if validation[0] == "duplicate":
@@ -161,7 +161,6 @@ def printList():
 				print("Sent mail.")
 			else:
 				print("Couldn't send mail.")
-			
 
 
 if not fs.path.isfile("log.json") and not fs.path.isfile("login.json"):
