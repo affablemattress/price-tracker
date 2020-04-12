@@ -31,9 +31,7 @@ def scrapeAmazon(address, tryLogin):
 		driver.get(address)
 		try:
 			name = driver.find_element_by_css_selector("#title").text.replace('"', "")
-			print(name)
-			price = int(re.search(re.compile(r"^₺?(([0-9]|\.)+)"), driver.find_elements_by_css_selector(".a-size-medium.a-color-price")[0].text).group(1).replace(".", ""))
-			print(price)
+			price = int(re.search(re.compile(r"^₺?(([0-9]|\.)+)"), driver.find_element_by_css_selector(".a-size-medium.a-color-price").text).group(1).replace(".", ""))
 			return {
 				"name": name,
 				"price": price
