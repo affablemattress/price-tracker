@@ -140,4 +140,5 @@ cython_debug/
 
 .vscode/
 
-credentials.json
+log.json
+login.json
