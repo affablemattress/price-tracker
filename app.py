@@ -1,4 +1,5 @@
 import json
+import time
 import os as fs
 from utilities import Validation, Mail, toHTTP, inspectAddress
 
@@ -106,15 +107,15 @@ def add():
 	address = input("Page address: ")
 	validation = validate.address(address)
 	if validation[0] == "unique":
-		addressInfo = inspectAddress(address)
+		if addressInfo := inspectAddress(address):
+			price = addressInfo["price"] if addressInfo else 0
 		productLog = {
-			"adress": validation[1],
-			"site": addressInfo.site,
-			"name": addressInfo.name,
-			"maxPrice": addressInfo.price,
-			"lastPrice": addressInfo.price,
-			"minPrice": addressInfo.price
-		}
+		"adress": validation[1],
+		"site": validation[2],
+		"name": validation[3],
+		"maxPrice": price,
+		"lastPrice": price,
+		"minPrice": price}	
 		with open("log.json", "r") as path:
 			log = json.load(path)
 		log["logs"].append(productLog)
@@ -161,6 +162,20 @@ def printList():
 				print("Sent mail.")
 			else:
 				print("Couldn't send mail.")
+
+
+def activate():
+	with open("log.json", "r") as path:
+		log = json.load(path)
+	while True:
+		for product in log["logs"]:
+			productInfo = inspectAddress(product["address"], True)
+			if productInfo:
+				print(productInfo["name"])
+				print(productInfo["price"])
+			else: print("Couldn't scrape " + product["address"])
+			time.sleep(600)
+
 
 
 if not fs.path.isfile("log.json") and not fs.path.isfile("login.json"):
