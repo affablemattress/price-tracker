@@ -4,7 +4,7 @@ import selenium.common.exceptions
 from time import sleep
 import json
 import re
-		
+
 
 def scrapeN11(address, tryLogin):
 	with open("login.json", "r") as path:
@@ -16,10 +16,13 @@ def scrapeN11(address, tryLogin):
 				driver.find_element_by_id("email").send_keys(login["n11"]["email"])
 				driver.find_element_by_id("password").send_keys(login["n11"]["password"])
 				driver.find_element_by_id("password").send_keys(Keys.RETURN)
+				try:
+					if driver.find_element_by_id("password"):
+						print("Invalid (n11) credentials.")
+				except selenium.common.exceptions.NoSuchElementException:
+					None
 			except selenium.common.exceptions.NoSuchElementException:
 				print("Couldn't establish connection. (login-n11)")
-			if driver.find_element_by_id("password"):
-				print("Invalid n11 credentials.")
 		driver.get(address)
 		try:
 			name = driver.find_element_by_css_selector(".proName").text
