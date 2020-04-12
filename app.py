@@ -5,6 +5,7 @@ from utilities import Validation, Mail, inspectAddress
 
 validate = Validation()
 
+
 def main():
 	print("Waiting for command...")
 	inputString = input("> ")
@@ -47,7 +48,7 @@ def init():
 	with open("log.json", "w") as path:
 		json.dump({"mail": "foobar", "logs": []}, path, ensure_ascii=False)
 	with open("login.json", "w") as path:
-		json.dump({"mail":[],"secrets": []}, path, ensure_ascii=False)
+		json.dump({"mail":[]}, path, ensure_ascii=False)
 	changeReceiver()
 	changeSender()
 
@@ -108,7 +109,7 @@ def add():
 	address = input("Page address: ")
 	validation = validate.address(address)
 	if validation[0] == "unique":
-		validation[3]
+		name = validation[3]
 		if addressInfo := inspectAddress(validation[1], False, False):
 			price = addressInfo["price"]
 			name = addressInfo["name"]
@@ -189,48 +190,8 @@ def activate():
 			time.sleep(600)
 
 
-
 if not fs.path.isfile("log.json") and not fs.path.isfile("login.json"):
 	init()	
 
 while True:
 	main()
-
-
-
-""" {
-	"mail": "foo@bar.com",
-	"logs": [
-		{
-			"adress": "adress",
-			"site": "foo",
-			"name": "bar",
-			"maxPrice": 0,
-			"lastPrice": 0,
-			"minPrice": 0
-		}
-	]
-} """
-
-""" {
-	"mail": {
-		"address": "foobar@gmail.com",
-		"password": "password"
-	},
-	"n11": {
-		"email": "foo@bar.com",
-		"password": "password"
-	},
-	"hepsiburada": {
-		"username": "foo@bar.com",
-		"password": "password"
-	},
-	"amazon: {
-		"username": "foo@bar.com",
-		"password": "password"
-	},
-	"gittigidiyor": {
-		"username": "foo@bar.com",
-		"password": "password"
-	}
-} """

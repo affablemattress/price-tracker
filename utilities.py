@@ -3,6 +3,9 @@ from random import randint
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from n11 import scrapeN11
+from gittigidiyor import scrapeGittigidiyor
+from amazon import scrapeAmazon
+from hepsiburada import scrapeHepsiburada
 
 class Validation:
 	def mail(self, mail: str) -> bool:
@@ -85,29 +88,28 @@ def updateLog(address: str, info: dict, sendMail: bool):
 			log = json.load(path)
 	for item in log["logs"]:
 		if item["address"] == address:
-			product = item
-			if price < product["lastPrice"]:
-				newProduct = product
+			if price < item["lastPrice"]:
+				newProduct = item
 				newProduct["name"] = info["name"]
 				newProduct["lastPrice"] = price
 				newProduct["minPrice"] = price if price < newProduct["minPrice"] else newProduct["minPrice"]
 				if sendMail:
 					mail = Mail()
-					text = "{}   Max. Price: {}   Min. Price: {}   Last Price: {}   Current Price: {}".format(newProduct["name"], product["maxPrice"], product["minPrice"], product["lastPrice"], newProduct["lastPrice"])
-					html = '<a href="{}">{}</a> <p>   Max. Price: {}   Min. Price: {}   Last Price: {}   <b>Current Price: {}</b></p>'.format(product["address"], newProduct["name"], product["maxPrice"], product["minPrice"], product["lastPrice"], newProduct["lastPrice"])
+					text = "{}   Max. Price: {}   Min. Price: {}   Last Price: {}   Price Before: {}".format(newProduct["name"], item["maxPrice"], item["minPrice"], item["lastPrice"], newProduct["lastPrice"])
+					html = '<a href="{}">{}</a> <p>   Max. Price: {}   Min. Price: {}   Price Before: {}   <b>Current Price: {}</b></p>'.format(item["address"], newProduct["name"], item["maxPrice"], item["minPrice"], item["lastPrice"], newProduct["lastPrice"])
 					if mail.send([text, html]):
 						print("Sent mail.")
 					else:
 						print("Couldn't send mail.")
-				log["logs"].remove(product)
+				log["logs"].remove(item)
 				log["logs"].append(newProduct)
 				with open("log.json", "w") as path:
 					json.dump(log, path, ensure_ascii=False)
-			elif price > product["lastPrice"]:
-				newProduct = product
+			elif price > item["lastPrice"]:
+				newProduct = item
 				newProduct["lastPrice"] = price
 				newProduct["maxPrice"] = price if price > newProduct["maxPrice"] else newProduct["maxPrice"]
-				log["logs"].remove(product)
+				log["logs"].remove(item)
 				log["logs"].append(newProduct)
 				with open("log.json", "w") as path:
 					json.dump(log, path, ensure_ascii=False)
@@ -120,21 +122,17 @@ def inspectAddress(address: str, sendMail: bool, tryLogin: bool) -> int:
 	print(type(site))
 	if site == "n11":
 		if info := scrapeN11(address, tryLogin):
-			price = info["price"]
 			updateLog(address, info, sendMail)
 		return info
 	elif site == "hepsiburada":
 		if info := scrapeHepsiburada(address, tryLogin):
-			price = info["price"]
 			updateLog(address, info, sendMail)
 		return info
 	elif site == "gittigidiyor":
 		if info := scrapeGittigidiyor(address, tryLogin):
-			price = info["price"]
 			updateLog(address, info, sendMail)
 		return info
 	elif site == "amazon":
-		if info := scrapeGittigidiyor(address, tryLogin):
-			price = info["price"]
+		if info := scrapeAmazon(address, tryLogin):
 			updateLog(address, info, sendMail)
 		return info
