@@ -20,7 +20,7 @@ class Validation:
 
 	def address(self, address: str) -> list: 
 		regex = re.search(re.compile(r"^(https?:\/\/)?([a-z]+\.)?([a-z0-9]+)(\.com|\.com\.tr)(\/.+)"), address)
-		validation = True if re.search(re.compile(r"[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$"), address) and regex else False
+		validation = True if re.search(re.compile(r"[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+çşğüİÇŞĞÜöÖ.~#?&//=]*)$"), address) and regex else False
 		with open("log.json", "r") as path:
 			log = json.load(path)
 		if validation:
