@@ -1,12 +1,14 @@
 import json
-import time
+import threading
 import os as fs
-from utilities import Validation, Mail, inspectAddress
+from time import sleep
+from utility import Validation, Mail, inspectAddress
 
 validate = Validation()
-
+active = False
 
 def main():
+	sleep(0.5)
 	print("Waiting for command...")
 	inputString = input("> ")
 	if inputString == "mail":
@@ -21,7 +23,7 @@ def main():
 		add()
 	elif inputString == "remove":
 		remove()
-	elif inputString == "credential":
+	elif inputString == "credentials":
 		if inputString := input("Modify n11 or hepsiburada or gittigidiyor or amazon: ") == "n11":
 			changeCredentials("n11")
 		elif inputString == "hepsiburada":
@@ -38,7 +40,10 @@ def main():
 		reset()
 	elif inputString == "activate":
 		activate()
+	elif inputString == "deactivate":
+		deactivate()
 	elif inputString == "exit":
+		deactivate()
 		exit()
 	else:
 		print("Unknown command.")
@@ -140,7 +145,7 @@ def remove():
 		log = json.load(path)
 	if validation[0] == "duplicate":
 		for product in log["logs"]:
-			if product["adress"] == validation[1]:
+			if product["address"] == validation[1]:
 				log["logs"].remove(product)
 				with open("log.json", "w") as path:
 					json.dump(log, path, ensure_ascii=False)
@@ -180,14 +185,40 @@ def activate():
 			changeCredentials(product["site"])
 			with open("login.json", "r") as path:
 				login = json.load(path)
-	while True:
+	global active
+	if active == False:
+		active = True
+		print("Activated script.")
+		print(threading.activeCount())
+		if threading.activeCount() == 1:
+			loopThread = threading.Thread(target=loop)
+			loopThread.start()
+	else:
+		print("Script already active.")
+
+
+def deactivate():
+	print("Deactivating script.")
+	global active
+	active = False
+
+
+def loop():
+	global active
+	while active:
+		with open("log.json", "r") as path:
+			log = json.load(path)
 		for product in log["logs"]:
+			if not activate:
+				break
 			productInfo = inspectAddress(product["address"], True, True)
 			if productInfo:
 				print(productInfo["name"])
 				print(productInfo["price"])
 			else: print("Couldn't scrape " + product["address"])
-			time.sleep(600)
+			print("Waiting for command...")
+			print(">", end=" ")
+			sleep(90)
 
 
 if not fs.path.isfile("log.json") and not fs.path.isfile("login.json"):
