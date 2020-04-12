@@ -1,7 +1,7 @@
 import json
 import time
 import os as fs
-from utilities import Validation, Mail, toHTTP, inspectAddress
+from utilities import Validation, Mail, inspectAddress
 
 validate = Validation()
 
@@ -22,13 +22,13 @@ def main():
 		remove()
 	elif inputString == "credential":
 		if inputString := input("Modify n11 or hepsiburada or gittigidiyor or amazon: ") == "n11":
-			changeCredential("n11")
+			changeCredentials("n11")
 		elif inputString == "hepsiburada":
-			changeCredential("hepsiburada")
+			changeCredentials("hepsiburada")
 		elif inputString == "gittigidiyor":
-			changeCredential("gittigidiyor")
+			changeCredentials("gittigidiyor")
 		elif inputString == "amazon":
-			changeCredential("amazon")
+			changeCredentials("amazon")
 		else: 
 			print("Unknown command.")
 	elif inputString == "list":
@@ -90,15 +90,16 @@ def changeSender():
 		json.dump(login, path, ensure_ascii=False)
 
 
-def changeCredential(site):
+def changeCredentials(site: str):
 	with open("login.json", "r") as path:
 		login = json.load(path)
+	print("Editing {} credentials.".format(site))
 	mail = input("E-mail: ")
 	while not validate.mail(mail):
 			print("Invalid e-mail.")
 			mail = input("E-mail: ")
 	password = input("Password: ")
-	login["site"] = {"email": mail, "password": password}
+	login[site] = {"email": mail, "password": password}
 	with open("login.json", "w") as path:
 		json.dump(login, path, ensure_ascii=False)
 
@@ -107,12 +108,16 @@ def add():
 	address = input("Page address: ")
 	validation = validate.address(address)
 	if validation[0] == "unique":
-		if addressInfo := inspectAddress(address):
-			price = addressInfo["price"] if addressInfo else 0
+		validation[3]
+		if addressInfo := inspectAddress(validation[1], False, False):
+			price = addressInfo["price"]
+			name = addressInfo["name"]
+		else: 
+			price = 0
 		productLog = {
-		"adress": validation[1],
+		"address": validation[1],
 		"site": validation[2],
-		"name": validation[3],
+		"name": name,
 		"maxPrice": price,
 		"lastPrice": price,
 		"minPrice": price}	
@@ -154,22 +159,29 @@ def printList():
 		html = "<html><body>"
 		for product in log["logs"]:
 			text += "{}   Max. Price: {}   Min. Price: {}   Current Price: {}\n".format(product["name"], product["maxPrice"], product["minPrice"], product["lastPrice"])
-			html += '<h4>{}</h5><a href="{}">Link</a> <p>   Max. Price: {}   Min. Price: {}   Current Price: {}</p>'.format(product["name"], product["address"], product["maxPrice"], product["minPrice"], product["lastPrice"])
+			html += '<a href="{}"> {} </a> <p>   Max. Price: {}   Min. Price: {}   <b>Current Price: {}</b></p><hr>'.format(product["address"], product["name"], product["maxPrice"], product["minPrice"], product["lastPrice"])
 		print(text)
 		html += "</body></html>"
-		with Mail() as mail:
-			if mail.send([text, html]):
-				print("Sent mail.")
-			else:
-				print("Couldn't send mail.")
+		mail = Mail()
+		if mail.send([text, html]):
+			print("Sent mail.")
+		else:
+			print("Couldn't send mail.")
 
 
 def activate():
 	with open("log.json", "r") as path:
 		log = json.load(path)
+	with open("login.json", "r") as path:
+		login = json.load(path)
+	for product in log["logs"]:
+		if not product["site"] in login:
+			changeCredentials(product["site"])
+			with open("login.json", "r") as path:
+				login = json.load(path)
 	while True:
 		for product in log["logs"]:
-			productInfo = inspectAddress(product["address"], True)
+			productInfo = inspectAddress(product["address"], True, True)
 			if productInfo:
 				print(productInfo["name"])
 				print(productInfo["price"])
@@ -206,7 +218,7 @@ while True:
 		"password": "password"
 	},
 	"n11": {
-		"username": "foo@bar.com",
+		"email": "foo@bar.com",
 		"password": "password"
 	},
 	"hepsiburada": {
