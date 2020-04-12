@@ -2,11 +2,9 @@
 
 Peridodically gathers product data from the given URLs, saves the data to log.json and notifies the user via email on any price drop. 
 
-Supports: n11, Gittigidiyor, Hepsiburada, Amazon TR/Amazon(?)
+# Requires Python 3.8+ to run.
 
 Uses Opera webdriver by default.
-
-# Requires Python 3.8+ to run.
 
 ### Dependencies: 
 `Selenium.py`
