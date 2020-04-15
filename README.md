@@ -10,11 +10,11 @@ Uses Opera webdriver by default.
 `Selenium.py`
 
 ### Commands: 
- - `mail` change adress to send mails to / change adress to send mails from.
- - `credentials` change login credentials for sites.
- - `add` add address to the tracking list.
- - `remove` remove address from the list.
+ - `mail` change address to send mails to / change adress to send mails from.
+ - `credentials` change login credentials for websites.
+ - `add` add a new address to the tracking list.
+ - `remove` remove an address from the list.
  - `list` print and mail the list items.
  - `reset` reset all data.
- - `activate`  start looping through the list and notify with mail on any change. 
- - `dectivate`  breaks the loop. 
+ - `activate` start looping through the list and notify with mail on any change. 
+ - `dectivate` breaks the loop. 
