@@ -6,6 +6,7 @@ from n11 import scrapeN11
 from gittigidiyor import scrapeGittigidiyor
 from amazon import scrapeAmazon
 from hepsiburada import scrapeHepsiburada
+from akakce import scrapeAkakce
 
 class Validation:
 	def mail(self, mail: str) -> bool:
@@ -18,11 +19,14 @@ class Validation:
 		return validation
 
 
-	def address(self, address: str) -> list: 
+	def address(self, address: str) -> list:
+		sitesList = ["n11", "gittigidiyor", "hepsiburada", "amazon", "akakce"]
 		regex = re.search(re.compile(r"^(https?:\/\/)?([a-z]+\.)?([a-z0-9]+)(\.com|\.com\.tr)(\/.+)"), address)
 		validation = True if re.search(re.compile(r"[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+çşğüİÇŞĞÜöÖ.~#?&//=]*)$"), address) and regex else False
 		with open("log.json", "r") as path:
 			log = json.load(path)
+		if validation:
+			validation = False if not regex.group(3) in sitesList else True
 		if validation:
 			try:
 				http = ('https://www.' + ''.join([regex.group(iter) for iter in range(3,6)]))
@@ -119,7 +123,6 @@ def updateLog(address: str, info: dict, sendMail: bool):
 def inspectAddress(address: str, sendMail: bool, tryLogin: bool) -> int:
 	validation = validate.address(address)
 	site = validation[2]
-	print(type(site))
 	if site == "n11":
 		if info := scrapeN11(address, tryLogin):
 			updateLog(address, info, sendMail)
@@ -135,4 +138,7 @@ def inspectAddress(address: str, sendMail: bool, tryLogin: bool) -> int:
 	elif site == "amazon":
 		if info := scrapeAmazon(address, tryLogin):
 			updateLog(address, info, sendMail)
-		return info
+		return 
+	elif site == "akakce":
+		if info := scrapeAkakce(address):
+			updateLog(address, info, sendMail)
